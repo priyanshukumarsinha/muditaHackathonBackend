@@ -8,13 +8,12 @@ const userSchema = new Schema(
             type : String,
             required : true,
             trim : true,
-            index : true, //makes the field easily searchable
         },
         type: {
             type: String,
             required: true,
             enum: ['individual', 'company', 'ngo'],
-            default: 'user',
+            default: 'individual',
         },
         email : {
             type : String,
@@ -27,7 +26,6 @@ const userSchema = new Schema(
             type : String,
             required : true,
             trim : true,
-            index : true,
         },
         avatar : {
             type : String, // Cloudnary URL
