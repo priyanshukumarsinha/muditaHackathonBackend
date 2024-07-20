@@ -13,7 +13,7 @@
 
 import { errorHandler } from "../middlewares/errorHandler.middleware.js"
 
-const AsyncHandler = (requestHandler) => {
+const asyncHandler = (requestHandler) => {
     return async (req, res, next) => {
         Promise.resolve(requestHandler(req, res, next))
             .catch((err) => next(errorHandler(err, req, res, next)));
@@ -22,5 +22,5 @@ const AsyncHandler = (requestHandler) => {
 // Export the AsyncHandler function
 
 export { 
-    AsyncHandler
+    asyncHandler
 }

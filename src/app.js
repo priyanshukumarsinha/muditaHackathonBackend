@@ -35,5 +35,10 @@ app.get('/health-check', (req, res) => {
     res.send('Congratulations, Server is running!');
 });
 
+import userRouter from './routes/user.routes.js'
+
+app.use('/api/v1/user', userRouter);
+
+
 export default app;
 
