@@ -265,17 +265,18 @@ const getCurrentUser = asyncHandler(async(req, res) => {
 })
 
 const updateAccountDetails = asyncHandler(async(req, res) => {
-    const {fullName, email} = req.body
+    const {name, password, email} = req.body
     // if you want to update a file, keep them in seperate endpoint
 
-    if(!fullName && !email) throw new ApiError(400, "All Fields are Required");
+    if(!name && !password && !email) throw new ApiError(400, "All Fields are Required");
 
     const user = await User.findByIdAndUpdate(
         req.user?._id, 
         {
             $set : {
-                fullName,
-                email
+                name,
+                email,
+                password
             }
         },
         {
@@ -328,21 +329,21 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 
 })
 
-const updateUserCoverImage = asyncHandler(async(req, res) => {
+const updateUserLogo = asyncHandler(async(req, res) => {
 
     // after uploading new Avatar file : it will be available in public/temp
-    const coverImageLocalPath = req.file?.path
-    if(!coverImageLocalPath) throw new ApiError(404, "Cover Image File is Missing");
+    const logoLocalPath = req.file?.path
+    if(!logoLocalPath) throw new ApiError(404, "Cover Image File is Missing");
 
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    const logo = await uploadOnCloudinary(logoLocalPath)
 
-    if(!coverImage.url) throw new ApiError(404, "Error while uploading on Cover Image");
+    if(!logo.url) throw new ApiError(404, "Error while uploading on Cover Image");
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set : {
-                coverImage : coverImage.url
+                logo : logo.url
             }
         },
         {
@@ -355,138 +356,12 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
             new ApiResponse(
                 200,
                 user,
-                "Cover Image Updated Successfully!"
+                "Logo Image Updated Successfully!"
             )
         )
 
 })
 
-const getUserChannelProfile = asyncHandler(async(req, res) => {
-    const {username} = req.params
-
-    if(!username?.trim()) throw new ApiError(400, "Username is missing!!") ;
-
-    const channel = await User.aggregate([
-        {
-            $match : {
-                username : username?.toLowerCase()
-            },
-        },
-        {
-            $lookup : {
-                from : "subcriptions",
-                localField : "_id",
-                foreignField : "channel",
-                as : "subscribers"
-            }
-        },
-        {
-            $lookup : {
-                from : "subscriptions",
-                localField : "_id",
-                foreignField : "subscriber",
-                as : "subscribedTo"
-            }
-        },
-        {
-            $addFields : {
-                subscribersCount : {
-                    $size : "$subscibers"
-                },
-                channelsSubscribedToCount : {
-                    $size : "$subscribedTo"
-                },
-                isSubscribed : {
-                    $cond: {
-                        if : {
-                            $in : [req.user?._id, "$subscribers.subscriber"],
-                        },
-                        then : true,
-                        else : false
-                    }
-                }
-            }
-        },
-        {
-            $project : {
-                fullName : 1,
-                userName : 1,
-                subscribersCount : 1,
-                channelsSubscribedToCount : 1,
-                isSubscribed : 1,
-                avatar : 1,
-                coverImage : 1,
-                email : 1,
-
-            }
-        }
-    ])
-
-    if(!channel) throw new ApiError(506, "Channel Does Not Exist!");
-
-    return res.status(200)
-                .json(
-                    new ApiResponse(
-                        200,
-                        channel[0],
-                        "User Channel Fetched Succesfully!"
-                    )
-                )
-
-
-})
-
-const getWatchHistory = asyncHandler(async(req, res) => {
-    const user = await User.aggregate([
-        {
-            $match : {
-                _id : new mongoose.Types.ObjectID(req.user?._id) 
-            }
-        },
-        {
-            $lookup :{
-                from : "videos",
-                localField : "watchHistory",
-                foreignField : "_id",
-                as : "watchHistory",
-                pipeline : [
-                    {
-                        $lookup : {
-                            from : "users",
-                            localField : "owner",
-                            foreignField : "_id",
-                            as : "owner",
-                            pipeline : [
-                                {
-                                    $project : {
-                                        fullName : 1,
-                                        username : 1,
-                                        avatar : 1,
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        $addFields : {
-                            owner : {
-                                $first : "$owner"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    ])
-    return res.status(200)
-                .json(
-                    new ApiResponse(
-                        200,
-                        user[0].watchHistory,
-                        "Watch History fetched Successfully!"
-                    )
-                )
-})
 
 export {
     registerUser, 
@@ -497,7 +372,5 @@ export {
     getCurrentUser, 
     updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage,
-    getUserChannelProfile,
-    getWatchHistory,
+    updateUserLogo
 }
