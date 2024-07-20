@@ -31,9 +31,9 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
-app.use('/', (req, res) => {
-    res.send('Welcome to the Donation Management System API');
-});
+import healthCheck from './routes/healthCheck.routes.js'
+
+app.use('/', healthCheck);
 
 import userRouter from './routes/user.routes.js'
 
