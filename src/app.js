@@ -39,6 +39,14 @@ import userRouter from './routes/user.routes.js'
 
 app.use('/api/v1/user', userRouter);
 
+import eventRouter from './routes/event.routes.js'
+
+app.use('/api/v1/event', eventRouter);
+
+import donationRouter from './routes/donation.routes.js'
+
+app.use('/api/v1/donation', donationRouter);
+
 
 export default app;
 
