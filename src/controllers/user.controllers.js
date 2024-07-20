@@ -19,44 +19,48 @@ const registerUser = asyncHandler( async(req, res) => {
     // then, return response
 
     // Take data from user as per user model (from frontend)
-    const {fullName, username, email, password} = req.body
+    const {name, email, password, type, phoneNumber} = req.body
 
     // (Validation) : Check if the data is as per our need (all required fields are present) 
     if(
-        [fullName, username, email, password].some((field) => field?.trim() === '')
+        [name, email, password, phoneNumber].some((field) => field?.trim() === '')
     ) throw new ApiError(400, "Required Field Empty!!");
     
     // Check if the user already exists : can be checked using username and email
     const existedUser = await User.findOne({
-        $or : [{username}, {email}]
+        $or : [{email}]
     })
-    if(existedUser) throw new ApiError(401, "User with email or username Already Exists !!");
+
+    if(existedUser) throw new ApiError(401, "User with email Already Exists !!");
+
+    // console.log(req.files.avatar[0].path, req.files.logo[0].path)
 
     // Check for files (images), check for avatar (required)
-    const avatarLocalPath = req.files?.avatar[0]?.path
+    const avatarLocalPath = req.files.avatar[0].path
     // const coverImageLocalPath = req.files?.coverImage[0]?.path : had problem with this
 
-    let coverImageLocalPath;
-    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
-        coverImageLocalPath = req.files.coverImage[0].path;
+    let logoPath;
+    if(req.files && Array.isArray(req.files.logo) && req.files.logo.length > 0){
+        logoPath = req.files.logo[0].path;
     }
 
     if(!avatarLocalPath) throw new ApiError(402, "Avatar File is required !!");
 
     // upload them (files) to cloudinary, check for avatar (required)
     const avatar = await uploadOnCloudinary(avatarLocalPath); // uploads avatar
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath); // uploads coverImage
+    const logo = await uploadOnCloudinary(logoPath); // uploads coverImage
     
     if(!avatar) throw new ApiError(500, "Avatar File not uploaded !!");
 
     // create User Object : create entry in db (add user in mongodb Database (if all conditions true))
     const user = await User.create({
-        fullName : fullName.trim(), 
+        name : name.trim(), 
         avatar : avatar.url, 
-        coverImage: coverImage?.url || "", 
-        username : username.trim().toLowerCase(), 
+        logo: logo?.url || "", 
         email : email.trim().toLowerCase(), 
         password,
+        phoneNumber,
+        type,
     })
     // checking if user exists now (i.e if user is created)
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
@@ -80,17 +84,20 @@ const loginUser = asyncHandler( async(req, res) => {
     // send response
 
     // Take data from (req.body) user 
-    const {email, username, password} = req.body;
+    const {email, password, type} = req.body;
 
     // Validation : Check if the data is as per our need
-    if(!username && !email) throw new ApiError(402, "Username or Email is Required !!");
+    if(!email) throw new ApiError(402, "Email is Required !!");
 
     // Find the user : check if any User exists with this username or email in DB
     const user = await User.findOne({
-        $or : [{username}, {email}]
+        $or : [{email}]
     })
 
-    if(!user) throw new ApiError(404, "User with this email or username Does not Exist !!");
+    if(!user) throw new ApiError(404, "User with this email Does not Exist !!");
+
+    // check the type of user
+    if(user.type !== type) throw new ApiError(403, "Invalid User Credentials !!");
 
     // If User exists, 
     // Password Check 

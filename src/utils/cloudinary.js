@@ -7,11 +7,13 @@ import fs from 'fs'
 //  - it links or unlinks files from fs
 
 // cludinary configuration
-cloudinary.config({ 
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-    api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRET
+const config = cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dpwosfzhg", 
+    api_key: process.env.CLOUDINARY_API_KEY || "518777628771669", 
+    api_secret: process.env.CLOUDINARY_API_SECRET || "TgIkJXucvSGbloqPaeTabVDzjs4"
 });
+
+console.log(config);
 
 
 // So first, we will upload the file to cloudinary, and then unlink file
@@ -22,10 +24,13 @@ const uploadOnCloudinary = async(localFilePath) => {
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type : "auto",
         })
+
+        console.log(response);
         // file has been uploaded successfully
         return response;
     } catch (error) {
         // remove the locally saved temporary file as the upload operation got failed
+        console.log("Error in uploading file on cloudinary", error);
         return null;
     } finally{
         fs.unlink(localFilePath, () => {})
@@ -36,7 +41,7 @@ const uploadOnCloudinary = async(localFilePath) => {
 const deleteFromCloudinary = async(fileName) => {
     try {
         if(!fileName) return null;
-        const response = await cloudinary.api.delete_resources([fileName], { type: 'upload', resource_type: 'video' })
+        const response = await cloudinary.api.delete_resources([fileName], { type: 'upload', resource_type: 'auto' })
         return response;
     } catch (error) {
         return null;

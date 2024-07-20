@@ -1,1 +1,1 @@
-export const DB_NAME = "auth";   
+export const DB_NAME = "mudita";   

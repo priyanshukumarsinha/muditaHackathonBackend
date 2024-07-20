@@ -4,21 +4,17 @@ import bcrypt from 'bcrypt';
 
 const userSchema = new Schema(
     {
-        watchHistory : {
-            type : [
-                {
-                    type : Schema.Types.ObjectId,
-                    ref : "Video",
-                }
-            ],
-        },
-        username : {
+        name : {
             type : String,
             required : true,
-            unique : true,
-            lowercase : true,
             trim : true,
             index : true, //makes the field easily searchable
+        },
+        type: {
+            type: String,
+            required: true,
+            enum: ['individual', 'company', 'ngo'],
+            default: 'user',
         },
         email : {
             type : String,
@@ -27,7 +23,7 @@ const userSchema = new Schema(
             lowercase : true,
             trim : true,
         },
-        fullName : {
+        phoneNumber : {
             type : String,
             required : true,
             trim : true,
@@ -37,7 +33,7 @@ const userSchema = new Schema(
             type : String, // Cloudnary URL
             required : true,
         },
-        coverImage : {
+        logo : {
             type : String,
         },
         password : {
@@ -67,8 +63,7 @@ userSchema.methods.generateAccessToken = function(){
         {
             _id : this._id,
             email : this.email,
-            username : this.username,
-            fullName : this.fullName,
+            name : this.name,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
@@ -82,8 +77,7 @@ userSchema.methods.generateRefreshToken = function(){
         {
             _id : this._id,
             email : this.email,
-            username : this.username,
-            fullName : this.fullName,
+            name : this.name,
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
