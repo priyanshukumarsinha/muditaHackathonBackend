@@ -31,6 +31,11 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
+app.get('/', (req, res) => {
+    res.send('Welcome to the NGO API');
+});
+
+// Health Check
 app.get('/health-check', (req, res) => {
     res.send('Congratulations, Server is running!');
 });
